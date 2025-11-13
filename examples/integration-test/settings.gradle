@@ -1,0 +1,4 @@
+rootProject.name = 'module-proxy-integration-test'
+
+// This is a standalone project, separate from the main module-proxy build
+// It brings in the echo-service as a SNAPSHOT dependency to test the proxy functionality

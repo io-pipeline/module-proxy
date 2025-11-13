@@ -187,6 +187,23 @@ The proxy service can be deployed in several ways:
 2. **Single Container**: Package both the proxy and module in a single container
 3. **Separate Containers**: Deploy the proxy and module as separate containers
 
+## Integration Test Example
+
+A complete integration test example is available in [`examples/integration-test/`](examples/integration-test/). This standalone project demonstrates:
+
+- Using the `echo-service` SNAPSHOT as a backend
+- Running module-proxy as a sidecar
+- Writing integration tests with Testcontainers
+- Docker Compose setup for local testing
+
+**Quick Start:**
+```bash
+cd examples/integration-test
+./run-tests.sh
+```
+
+See the [Integration Test README](examples/integration-test/README.md) for detailed documentation.
+
 ## Benefits
 
 1. **Separation of Concerns**: Module developers focus on business logic, while the proxy handles infrastructure concerns

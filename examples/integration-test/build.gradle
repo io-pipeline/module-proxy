@@ -1,0 +1,95 @@
+plugins {
+    id 'java'
+}
+
+group = 'io.pipeline.examples'
+version = '1.0.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    // Maven Local for published Pipeline artifacts during development
+    mavenLocal() {
+        content {
+            includeGroupByRegex "io\\.pipeline(\\..*)?"
+        }
+    }
+
+    // Gitea Maven registry (for SNAPSHOT artifacts like echo-service)
+    maven {
+        url = uri('https://git.rokkon.com/api/packages/io-pipeline/maven')
+        allowInsecureProtocol = false
+        content {
+            includeGroupByRegex "io\\.pipeline(\\..*)?"
+        }
+    }
+
+    // Reposilite for SNAPSHOT artifacts
+    maven {
+        url = uri('https://maven.rokkon.com/snapshots')
+        allowInsecureProtocol = false
+        content {
+            includeGroupByRegex "io\\.pipeline(\\..*)?"
+        }
+    }
+
+    // Nexus as Maven Central mirror
+    maven {
+        url = uri('https://maven.rokkon.com/repository/maven-public/')
+        allowInsecureProtocol = false
+    }
+
+    // Fallback to Maven Central
+    mavenCentral()
+}
+
+dependencies {
+    // Echo service as SNAPSHOT dependency
+    testImplementation 'io.pipeline:echo-service:1.0.0-SNAPSHOT'
+
+    // gRPC dependencies for testing
+    testImplementation 'io.grpc:grpc-netty:1.68.1'
+    testImplementation 'io.grpc:grpc-protobuf:1.68.1'
+    testImplementation 'io.grpc:grpc-stub:1.68.1'
+    testImplementation 'io.grpc:grpc-services:1.68.1'
+
+    // Pipeline gRPC stubs
+    testImplementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
+    testImplementation 'io.pipeline:pipeline-api:1.0.0-SNAPSHOT'
+
+    // JUnit 5 for testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // AssertJ for fluent assertions
+    testImplementation 'org.assertj:assertj-core:3.27.0'
+
+    // Testcontainers for Docker integration
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+
+    // SLF4J for logging
+    testImplementation 'org.slf4j:slf4j-api:2.0.9'
+    testRuntimeOnly 'org.slf4j:slf4j-simple:2.0.9'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+
+    // Set system properties for logging
+    systemProperty "org.slf4j.simpleLogger.defaultLogLevel", "info"
+    systemProperty "org.slf4j.simpleLogger.log.org.testcontainers", "debug"
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
