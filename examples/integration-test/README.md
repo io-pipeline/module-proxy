@@ -77,6 +77,7 @@ Before running this integration test, ensure you have:
 
 2. **Run the integration tests:**
    ```bash
+   chmod +x test-integration.sh   # Ensure the script is executable
    ./test-integration.sh
    ```
 
@@ -228,15 +229,10 @@ docker-compose ps
 To completely remove all resources:
 
 ```bash
-# Stop and remove containers
-docker compose down
-# or: docker-compose down
+# Stop containers and remove volumes
+docker-compose down -v
 
-# Remove volumes
-docker compose down -v
-# or: docker-compose down -v
-
-# Remove network
+# Remove network (if needed)
 docker network rm module-proxy-integration-test 2>/dev/null || true
 ```
 

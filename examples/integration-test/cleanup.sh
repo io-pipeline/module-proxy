@@ -23,6 +23,14 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Removing volumes..."
     $DOCKER_COMPOSE down -v
+read -p "Remove volumes? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Stopping containers and removing volumes..."
+    docker-compose down -v
+else
+    echo "Stopping containers..."
+    docker-compose down
 fi
 
 # Remove network if it exists

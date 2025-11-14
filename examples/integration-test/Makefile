@@ -1,4 +1,4 @@
-.PHONY: help start stop test logs clean rebuild
+.PHONY: help start stop test logs clean rebuild logs-proxy logs-echo status health shell-proxy shell-echo
 
 # Detect docker compose command (v2: 'docker compose', v1: 'docker-compose')
 DOCKER_COMPOSE := $(shell docker compose version > /dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
@@ -55,7 +55,7 @@ status: ## Show status of all services
 
 health: ## Check health of all services
 	@echo "Checking echo service health..."
-	@curl -s http://localhost:9091/q/health || echo "Echo service not responding"
+	@grpcurl -plaintext -d '{"service":""}' localhost:9091 grpc.health.v1.Health/Check || echo "Echo service not responding"
 	@echo ""
 	@echo "Checking proxy health..."
 	@curl -s http://localhost:39100/q/health || echo "Proxy not responding"
