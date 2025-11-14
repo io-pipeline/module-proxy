@@ -26,10 +26,15 @@ print_info() {
     echo -e "${YELLOW}ℹ $1${NC}"
 }
 
-# Check if docker-compose is available
-if ! command -v docker-compose &> /dev/null; then
-    print_error "docker-compose is not installed"
-    exit 1
+# Check if docker compose (v2) or docker-compose (v1) is available
+DOCKER_COMPOSE="docker compose"
+if ! docker compose version &> /dev/null; then
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE="docker-compose"
+    else
+        print_error "docker compose is not installed"
+        exit 1
+    fi
 fi
 
 # Check if grpcurl is available
@@ -38,8 +43,8 @@ if ! command -v grpcurl &> /dev/null; then
     exit 1
 fi
 
-print_info "Starting services with docker-compose..."
-docker-compose up -d
+print_info "Starting services with docker compose..."
+$DOCKER_COMPOSE up -d
 
 echo ""
 print_info "Waiting for services to be healthy..."
@@ -48,7 +53,7 @@ print_info "Waiting for services to be healthy..."
 MAX_WAIT=60
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-    if docker-compose ps echo-service | grep -q "healthy"; then
+    if $DOCKER_COMPOSE ps echo-service | grep -q "healthy"; then
         print_success "Echo service is healthy"
         break
     fi
@@ -56,34 +61,34 @@ while [ $WAITED -lt $MAX_WAIT ]; do
     sleep 5
     WAITED=$((WAITED + 5))
     echo -n "."
-done
 
-if [ $WAITED -ge $MAX_WAIT ]; then
-    print_error "Echo service failed to become healthy"
-    docker-compose logs echo-service
-    exit 1
-fi
+    if [ $WAITED -ge $MAX_WAIT ]; then
+        print_error "Echo service failed to become healthy"
+        $DOCKER_COMPOSE logs echo-service
+        exit 1
+    fi
+done
 
 echo ""
 
 # Wait for proxy to be healthy
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-    if docker-compose ps module-proxy | grep -q "healthy"; then
+    if $DOCKER_COMPOSE ps module-proxy | grep -q "healthy"; then
         print_success "Module-proxy is healthy"
         break
+    fi
+
+    if [ $WAITED -eq $((MAX_WAIT - 5)) ]; then
+        print_error "Module-proxy failed to become healthy"
+        $DOCKER_COMPOSE logs module-proxy
+        exit 1
     fi
 
     sleep 5
     WAITED=$((WAITED + 5))
     echo -n "."
 done
-
-if [ $WAITED -ge $MAX_WAIT ]; then
-    print_error "Module-proxy failed to become healthy"
-    docker-compose logs module-proxy
-    exit 1
-fi
 
 echo ""
 echo ""
@@ -149,6 +154,6 @@ echo "======================================"
 echo -e "${GREEN}All Integration Tests Passed!${NC}"
 echo "======================================"
 echo ""
-print_info "To view logs, run: docker-compose logs -f"
-print_info "To stop services, run: docker-compose down"
+print_info "To view logs, run: $DOCKER_COMPOSE logs -f"
+print_info "To stop services, run: $DOCKER_COMPOSE down"
 echo ""

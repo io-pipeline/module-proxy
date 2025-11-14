@@ -37,7 +37,9 @@ flowchart LR
 
 Before running this integration test, ensure you have:
 
-1. **Docker** and **docker-compose** installed
+1. **Docker** and **Docker Compose** installed
+   - Docker Compose v2 (`docker compose`) or v1 (`docker-compose`)
+   - The scripts automatically detect which version you have
 2. **grpcurl** installed (for testing gRPC endpoints)
    ```bash
    # macOS
@@ -49,17 +51,28 @@ Before running this integration test, ensure you have:
    # Or download from: https://github.com/fullstorydev/grpcurl/releases
    ```
 3. **curl** (usually pre-installed)
-4. Built the module-proxy Docker image:
+4. **Built the module-proxy Docker image**:
+   
+   **Note**: This integration test requires the `rokkon/proxy-module:latest` Docker image to be built locally.
+   
+   If you're running this from the module-proxy repository root:
    ```bash
    cd ../..  # Go to module-proxy root
    ./docker-build.sh
    ```
+   
+   If the build script doesn't work (e.g., if you're in a standalone clone of this repo), you'll need to:
+   - Build the module-proxy application using Gradle
+   - Create a Docker image tagged as `rokkon/proxy-module:latest`
+   - See the main repository for full build instructions
 
 ## Quick Start
 
 1. **Start the services:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
+   # or for older Docker Compose v1:
+   # docker-compose up -d
    ```
 
 2. **Run the integration tests:**
@@ -70,7 +83,9 @@ Before running this integration test, ensure you have:
 
 3. **Stop the services:**
    ```bash
-   docker-compose down
+   docker compose down
+   # or for older Docker Compose v1:
+   # docker-compose down
    ```
 
 ## Manual Testing
@@ -151,13 +166,16 @@ The integration test script validates:
 
 ```bash
 # View all logs
-docker-compose logs -f
+docker compose logs -f
+# or: docker-compose logs -f
 
 # View only proxy logs
-docker-compose logs -f module-proxy
+docker compose logs -f module-proxy
+# or: docker-compose logs -f module-proxy
 
 # View only echo service logs
-docker-compose logs -f echo-service
+docker compose logs -f echo-service
+# or: docker-compose logs -f echo-service
 ```
 
 ## Troubleshooting
