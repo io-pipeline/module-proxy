@@ -1,6 +1,6 @@
-package io.pipeline.module.proxy;
+package ai.pipestream.module.proxy;
 
-import io.pipeline.data.module.MutinyPipeStepProcessorGrpc;
+import ai.pipestream.data.module.MutinyPipeStepProcessorGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import jakarta.annotation.PreDestroy;

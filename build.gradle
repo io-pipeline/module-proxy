@@ -2,15 +2,23 @@ plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.quarkus)
     alias(libs.plugins.maven.publish)
+
+    id 'signing'
+    id 'com.gradleup.nmcp' version '1.2.0'
 }
+def pipelineBomVersion = findProperty('pipelineBomVersion') ?: '0.2.1-SNAPSHOT'
+def pipestreamDataVersion = findProperty('pipestreamDataVersion') ?: '0.2.1'
 
 dependencies {
-    // Use published BOM from Maven Local
-    implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
+    implementation 'io.quarkus:quarkus-container-image-docker'
+    // Import pipeline BOM to align all managed versions
+    implementation platform("ai.pipestream:pipeline-bom:${pipelineBomVersion}")
 
     // Core Quarkus dependencies
-    implementation 'io.quarkus:quarkus-grpc'
-    implementation 'io.quarkus:quarkus-arc'
+    implementation libs.quarkus.arc
+    implementation libs.quarkus.rest
+    implementation libs.quarkus.grpc
+    // Core Quarkus dependencies
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-smallrye-stork'
     implementation 'io.quarkus:quarkus-opentelemetry'
@@ -33,14 +41,18 @@ dependencies {
     // SSL support
     implementation 'io.quarkus:quarkus-elytron-security'
 
-    // Pipeline libraries (published to Maven Local)
-    implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
-    implementation 'io.pipeline:pipeline-commons'
-    implementation 'io.pipeline:pipeline-api'
-    implementation 'io.pipeline:data-util'
-    implementation 'io.pipeline:dynamic-grpc'
-    implementation 'io.pipeline:dynamic-grpc-registration-clients'
-    implementation 'io.pipeline:quarkus-pipeline-devservices:1.0.0-SNAPSHOT'
+
+    testImplementation libs.pipestream.grpc.wiremock
+
+    // Test data dependencies - sample documents published as Maven artifacts
+    testImplementation "ai.pipestream.testdata:sample-doc-types:${pipestreamDataVersion}"
+    testImplementation "ai.pipestream.testdata:test-documents:${pipestreamDataVersion}"
+    // Pipestream libraries - versions managed entirely by the BOM/catalog
+    implementation libs.pipestream.compose.devservices
+    implementation libs.pipestream.grpc.stubs
+    implementation libs.pipestream.commons
+    implementation libs.pipestream.dynamic.grpc
+    implementation libs.pipestream.dynamic.grpc.registration.clients
 
     // Test dependencies
     testImplementation 'io.quarkus:quarkus-junit5'
@@ -56,8 +68,8 @@ dependencies {
     testImplementation 'io.quarkus:quarkus-junit5-mockito'
 }
 
-group = 'io.pipeline.module'
-version = '1.0.0-SNAPSHOT'
+group = 'ai.pipestream.module'
+version = "${pipelineBomVersion}"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -80,33 +92,31 @@ compileTestJava {
 // Publishing configuration
 publishing {
     publications {
-        maven(MavenPublication) {
+        maven(MavenPublication) { MavenPublication publication ->
             from components.java
-            artifactId = 'module-proxy'
             pom {
-                name = 'Module Proxy'
-                description = 'Proxy service for deploying pipeline modules in any language via gRPC'
-                url = 'https://github.com/io-pipeline/module-proxy'
+                name.set('Platform Registration Service')
+                description.set('Central service registry and discovery for the Pipeline platform')
+                url.set('https://github.com/ai-pipestream/module-proxy')
 
                 licenses {
                     license {
-                        name = 'Apache License 2.0'
-                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                        name.set('MIT License')
+                        url.set('https://opensource.org/license/mit')
                     }
                 }
 
                 developers {
                     developer {
-                        id = 'krickert'
-                        email = 'krickert@rokkon.com'
-                        name = 'Pipeline Engine Team'
+                        id.set('krickert')
+                        name.set('Pipestream Engine Team')
                     }
                 }
 
                 scm {
-                    connection = 'scm:git:ssh://git@git.rokkon.com:2222/io-pipeline/module-proxy.git'
-                    developerConnection = 'scm:git:ssh://git@git.rokkon.com:2222/io-pipeline/module-proxy.git'
-                    url = 'https://git.rokkon.com/io-pipeline/module-proxy'
+                    connection.set('scm:git:git://github.com/ai-pipestream/module-proxy.git')
+                    developerConnection.set('scm:git:ssh://github.com/ai-pipestream/module-proxy.git')
+                    url.set('https://github.com/ai-pipestream/module-proxy')
                 }
             }
         }
@@ -116,26 +126,23 @@ publishing {
         // Publish to Maven Local for development
         mavenLocal()
 
-        // Publish to Reposilite (primary artifact repository)
-        maven {
-            name = "Reposilite"
-            url = uri(version.toString().endsWith('-SNAPSHOT')
-                ? "https://maven.rokkon.com/snapshots"
-                : "https://maven.rokkon.com/releases")
-            credentials {
-                username = project.findProperty("reposilite.user") ?: System.getenv("REPOS_USER") ?: "admin"
-                password = project.findProperty("reposilite.token") ?: System.getenv("REPOS_PAT")
-            }
-        }
+    }
+}
 
-        // Publish to Gitea Maven registry (backup)
-        maven {
-            name = "Gitea"
-            url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
-            credentials {
-                username = project.findProperty("gitea.user") ?: System.getenv("GIT_USER") ?: "krickert"
-                password = project.findProperty("gitea.token") ?: System.getenv("GIT_PAT")
-            }
-        }
+signing {
+    def signingKey = System.getenv("GPG_SIGNING_KEY")
+    def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+
+    if (signingKey && signingPassword) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign publishing.publications.maven
+    }
+}
+
+nmcp {
+    publishAllPublicationsToCentralPortal {
+        username = providers.environmentVariable("MAVEN_CENTRAL_USERNAME")
+        password = providers.environmentVariable("MAVEN_CENTRAL_PASSWORD")
+        publishingType = "AUTOMATIC"
     }
 }

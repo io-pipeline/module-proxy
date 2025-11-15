@@ -1,7 +1,6 @@
-package io.pipeline.module.proxy;
+package ai.pipestream.module.proxy;
 
-import io.pipeline.data.v1.PipeDoc;
-import io.pipeline.data.module.*;
+import ai.pipestream.data.module.*;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -10,8 +9,6 @@ import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.jboss.logging.Logger;
-
-import java.time.Duration;
 
 /**
  * Proxy implementation of the PipeStepProcessor interface.

@@ -1,8 +1,7 @@
-package io.pipeline.module.proxy;
+package ai.pipestream.module.proxy;
 
-import io.pipeline.data.module.MutinyPipeStepProcessorGrpc;
-import io.pipeline.data.module.RegistrationRequest;
-import io.smallrye.mutiny.Uni;
+import ai.pipestream.data.module.MutinyPipeStepProcessorGrpc;
+import ai.pipestream.data.module.RegistrationRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.health.HealthCheck;
