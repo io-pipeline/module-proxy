@@ -13,7 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -71,11 +72,11 @@ public abstract class PipeStepProcessorProxyTestBase {
 
         ModuleProcessResponse response = subscriber.awaitItem().getItem();
 
-        assertThat(response).isNotNull();
-        assertThat(response.getSuccess()).isTrue();
-        assertThat(response.hasOutputDoc()).isTrue();
-        assertThat(response.getOutputDoc().getDocId()).isEqualTo(document.getDocId());
-        assertThat(response.getProcessorLogsList()).anyMatch(log -> log.contains("Backend: Document processed successfully"));
+        assertThat(response, notNullValue());
+        assertThat(response.getSuccess(), is(true));
+        assertThat(response.hasOutputDoc(), is(true));
+        assertThat(response.getOutputDoc().getDocId(), is(equalTo(document.getDocId())));
+        assertThat(response.getProcessorLogsList(), hasItem(containsString("Backend: Document processed successfully")));
     }
 
     @Test
@@ -107,11 +108,11 @@ public abstract class PipeStepProcessorProxyTestBase {
 
         ModuleProcessResponse response = subscriber.awaitItem().getItem();
 
-        assertThat(response).isNotNull();
-        assertThat(response.getSuccess()).isTrue();
-        assertThat(response.hasOutputDoc()).isTrue();
-        assertThat(response.getOutputDoc().getDocId()).isEqualTo(document.getDocId());
-        assertThat(response.getProcessorLogsList()).anyMatch(log -> log.contains("Backend: Test processing completed"));
+        assertThat(response, notNullValue());
+        assertThat(response.getSuccess(), is(true));
+        assertThat(response.hasOutputDoc(), is(true));
+        assertThat(response.getOutputDoc().getDocId(), is(equalTo(document.getDocId())));
+        assertThat(response.getProcessorLogsList(), hasItem(containsString("Backend: Test processing completed")));
     }
 
     @Test
@@ -141,14 +142,14 @@ public abstract class PipeStepProcessorProxyTestBase {
 
         ServiceRegistrationMetadata response = subscriber.awaitItem().getItem();
 
-        assertThat(response).isNotNull();
+        assertThat(response, notNullValue());
         // The proxy normalizes/overrides moduleName to identify itself
-        assertThat(response.getModuleName()).isEqualTo("proxy-module");
-        assertThat(response.getVersion()).isEqualTo("1.0.0");
-        assertThat(response.getHealthCheckPassed()).isTrue();
-        assertThat(response.getMetadataMap()).containsKey("proxy_enabled");
-        assertThat(response.getMetadataMap().get("proxy_enabled")).isEqualTo("true");
-        assertThat(response.getMetadataMap()).containsKey("proxy_version");
+        assertThat(response.getModuleName(), is(equalTo("proxy-module")));
+        assertThat(response.getVersion(), is(equalTo("1.0.0")));
+        assertThat(response.getHealthCheckPassed(), is(true));
+        assertThat(response.getMetadataMap(), hasKey("proxy_enabled"));
+        assertThat(response.getMetadataMap(), hasEntry("proxy_enabled", "true"));
+        assertThat(response.getMetadataMap(), hasKey("proxy_version"));
     }
 
     @Test
@@ -174,9 +175,9 @@ public abstract class PipeStepProcessorProxyTestBase {
 
         ModuleProcessResponse response = subscriber.awaitItem().getItem();
 
-        assertThat(response).isNotNull();
-        assertThat(response.getSuccess()).isFalse();
-        assertThat(response.getProcessorLogsList()).anyMatch(log -> log.contains("Proxy error: Simulated backend error"));
+        assertThat(response, notNullValue());
+        assertThat(response.getSuccess(), is(false));
+        assertThat(response.getProcessorLogsList(), hasItem(containsString("Proxy error: Simulated backend error")));
     }
 
     @Test
@@ -207,9 +208,9 @@ public abstract class PipeStepProcessorProxyTestBase {
 
         ModuleProcessResponse response = subscriber.awaitItem().getItem();
 
-        assertThat(response).isNotNull();
-        assertThat(response.getSuccess()).isFalse();
-        assertThat(response.getProcessorLogsList()).anyMatch(log -> log.contains("Backend: Processing failed"));
+        assertThat(response, notNullValue());
+        assertThat(response.getSuccess(), is(false));
+        assertThat(response.getProcessorLogsList(), hasItem(containsString("Backend: Processing failed")));
     }
 
     @Test
@@ -228,9 +229,9 @@ public abstract class PipeStepProcessorProxyTestBase {
 
         ServiceRegistrationMetadata response = subscriber.awaitItem().getItem();
 
-        assertThat(response).isNotNull();
+        assertThat(response, notNullValue());
         // The proxy sets moduleName to 'proxy-module' on failure recovery and a default version
-        assertThat(response.getModuleName()).isEqualTo("proxy-module");
-        assertThat(response.getVersion()).isEqualTo("1.0.0");
+        assertThat(response.getModuleName(), is(equalTo("proxy-module")));
+        assertThat(response.getVersion(), is(equalTo("1.0.0")));
     }
 }
