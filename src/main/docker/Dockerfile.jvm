@@ -18,22 +18,18 @@ FROM registry.access.redhat.com/ubi8/openjdk-21:1.18
 
 ENV LANGUAGE='en_US:en'
 
-# Install grpcurl for health checks
-RUN curl -sSL https://github.com/fullstorydev/grpcurl/releases/download/v1.8.7/grpcurl_1.8.7_linux_x86_64.tar.gz | tar -xz -C /usr/local/bin
+# Install gzip and grpcurl for health checks
+USER root
+RUN microdnf install -y gzip && \
+    curl -sSL https://github.com/fullstorydev/grpcurl/releases/download/v1.8.7/grpcurl_1.8.7_linux_x86_64.tar.gz | tar -xz -C /usr/local/bin && \
+    microdnf clean all
+USER 185
 
 # We make four distinct layers so if there are application changes the library layers can be reused
 COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185 build/quarkus-app/*.jar /deployments/
 COPY --chown=185 build/quarkus-app/app/ /deployments/app/
 COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
-
-# Copy the CLI tool for module registration
-COPY --chown=185 build/docker/register-module-cli.jar /deployments/pipeline-cli.jar
-
-# Create a wrapper script for the CLI
-RUN echo '#!/bin/bash' > /usr/local/bin/pipeline && \
-    echo 'java -jar /deployments/pipeline-cli.jar "$@"' >> /usr/local/bin/pipeline && \
-    chmod +x /usr/local/bin/pipeline
 
 # Note: proxy-module uses its own proxy-entrypoint.sh
 
